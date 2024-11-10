@@ -73,27 +73,30 @@ public:
         : id(id), jogo(jogo) {}
 
     void tentar_ocupar_cadeira() {
-        // TODO: Tenta ocupar uma cadeira utilizando o semáforo contador quando a música para (aguarda pela variável de condição)
-    }
+        std::unique_lock<std::mutex> lock(music_mutex);
+        music_cv.wait(lock, [] { return musica_parada.load(); });
+        lock.unlock();
 
-    void verificar_eliminacao() {
-        // TODO: Verifica se foi eliminado após ser destravado do semáforo
+        if (cadeira_sem.try_acquire()) {
+            std::cout << "Jogador " << id << " conseguiu uma cadeira!" << std::endl;
+        } else {
+            jogo.eliminar_jogador(id);
+            cadeira_sem.release();
+        }
     }
 
     void joga() {
-        // TODO: Aguarda a música parar usando a variavel de condicao
-        
-        // TODO: Tenta ocupar uma cadeira
-
-        
-        // TODO: Verifica se foi eliminado
-
+        while (jogo_ativo.load()) {
+            tentar_ocupar_cadeira();
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     }
 
 private:
     int id;
     JogoDasCadeiras& jogo;
 };
+
 
 class Coordenador {
 public:
