@@ -44,19 +44,22 @@ public:
         : num_jogadores(num_jogadores), cadeiras(num_jogadores - 1) {}
 
     void iniciar_rodada() {
-        // TODO: Inicia uma nova rodada, removendo uma cadeira e ressincronizando o semáforo
+        cadeiras--;
+        cadeira_sem.acquire();
     }
 
     void parar_musica() {
-        // TODO: Simula o momento em que a música para e notifica os jogadores via variável de condição
+        std::lock_guard<std::mutex> lock(music_mutex);
+        musica_parada = true;
+        music_cv.notify_all();
     }
 
     void eliminar_jogador(int jogador_id) {
-        // TODO: Elimina um jogador que não conseguiu uma cadeira
+        std::cout << "jogador " << jogador_id << "foi eliminado." << std::endl;
     }
 
     void exibir_estado() {
-        // TODO: Exibe o estado atual das cadeiras e dos jogadores
+        std::cout << "cadeiras disponíveis: " << cadeiras << std::endl;
     }
 
 private:
